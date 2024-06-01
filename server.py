@@ -1,8 +1,18 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import subprocess
+import json
+from sensordata import sensor_data
 
 hostname = "localhost"
 port = 8080
+
+def json_sensor_data():
+  cpu, gpu, fans = sensor_data();
+
+  return json.dumps({
+    "cpu": cpu,
+    "gpu": gpu,
+    "fans": fans,
+  });
 
 class SensorsServer(BaseHTTPRequestHandler):
   def do_GET(self):
@@ -14,11 +24,11 @@ class SensorsServer(BaseHTTPRequestHandler):
 
     elif self.path == "/sensors":
       try:
-        result = subprocess.run(['sensors', '-j'], stdout = subprocess.PIPE)
+        data = json_sensor_data();
         self.send_response(200)
         self.send_header("Content-type", "application/json")
         self.end_headers()
-        self.wfile.write(result.stdout)
+        self.wfile.write(bytes(data, "UTF-8"))
 
       except Exception as err:
         self.send_response(500)
@@ -34,7 +44,7 @@ class SensorsServer(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
   sensorsServer = HTTPServer((hostname, port), SensorsServer)
-  print("Server started http://%s:%s" % (hostname, port))
+  print(f'Server started http://{hostname}:{port}')
 
   try:
     sensorsServer.serve_forever()
