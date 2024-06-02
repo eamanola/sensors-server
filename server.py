@@ -2,7 +2,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 from sensordata import sensor_data
 
-hostname = "localhost"
+# hostname = "localhost"
+hostname = "0.0.0.0"
 port = 8080
 
 def json_sensor_data():
