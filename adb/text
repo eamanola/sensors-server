@@ -1,0 +1,2 @@
+#!/bin/sh
+adb shell input text $(echo $1 | sed 's/ /%s/g')

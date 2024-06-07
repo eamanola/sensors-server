@@ -1,0 +1,4 @@
+#!/bin/sh
+x="${1:-0}"
+y="${2:-0}"
+adb shell input tap $x $y
