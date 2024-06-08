@@ -54,7 +54,10 @@ def sensors():
       float(data["k10temp-pci-00c3"]["Tctl"]["temp1_input"]),
       float(data["nct6798-isa-0290"]["CHA_FAN1"]["fan1_input"]),
       float(data["nct6798-isa-0290"]["CPU_FAN"]["fan2_input"]),
-      float(data["nct6798-isa-0290"]["CHA_FAN2"]["fan3_input"])
+      float(data["nct6798-isa-0290"]["CHA_FAN2"]["fan3_input"]),
+      float(data["nct6798-isa-0290"]["CHA_FAN3"]["fan4_input"]),
+      float(data["nct6798-isa-0290"]["CPU_OPT"]["fan5_input"]),
+      float(data["nct6798-isa-0290"]["AIO_PUMP"]["fan6_input"]),
     );
   except Exception as err:
     print("sensors:", err);
@@ -95,7 +98,14 @@ def sensor_data():
   gpu_name = gpu_model() if gpu_name is None else gpu_name;
 
   cpu_utilization = cpu_usage();
-  cpu_temperture, rear_fanspeed, cpu_fanspeed, front_fanspeed = sensors();
+
+  cpu_temperture, \
+  cha_fan1_speed, \
+  cpu_fan_speed, \
+  cha_fan2_speed, \
+  cha_fan3_speed, \
+  cpu_opt_speed, \
+  aio_pump_speed = sensors();
 
   gpu_utilization, gpu_memory_utilization, gpu_temperature, gpu_fanspeed = gpu_info();
 
@@ -103,7 +113,7 @@ def sensor_data():
     "name": cpu_name,
     "utilization": (cpu_utilization, "%"),
     "temperature": (cpu_temperture, "°C"),
-    "fanspeed": (cpu_fanspeed, "rpm"),
+    "fanspeed": (cpu_fan_speed, "rpm"),
   };
   gpu = {
     "name": gpu_name,
@@ -112,9 +122,12 @@ def sensor_data():
     "temperature": (gpu_temperature, "°C"),
     "fanspeed": (gpu_fanspeed, "%"),
   };
-  fans = {
-    "rear": (rear_fanspeed, "rpm"),
-    "front": (front_fanspeed, "rpm"),
-  };
+  fans = [
+    { "name": "rear", "speed": [cha_fan1_speed, "rpm" ]},
+    { "name": "front", "speed": [cha_fan2_speed, "rpm" ]},
+    { "name": "CHA_FAN3", "speed": [cha_fan3_speed, "rpm" ]},
+    { "name": "CPU_OPT", "speed": [cpu_opt_speed, "rpm" ]},
+    { "name": "AIO_PUMP", "speed": [aio_pump_speed, "rpm" ]},
+  ];
 
   return cpu, gpu, fans;
