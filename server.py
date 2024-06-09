@@ -1,16 +1,16 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import json
-import subprocess
-from sensordata import sensor_data
+from json import dumps
+from subprocess import CalledProcessError, TimeoutExpired
+from sensorsdata import get_sensors
 
 # HOSTNAME = "localhost"
 HOSTNAME = "0.0.0.0"
 PORT = 8080
 
-def json_sensor_data():
-  cpu, gpu, fans = sensor_data()
+def get_sensors_json():
+  cpu, gpu, fans = get_sensors()
 
-  return json.dumps({
+  return dumps({
     "cpu": cpu,
     "gpu": gpu,
     "fans": fans,
@@ -27,7 +27,7 @@ class SensorsServer(BaseHTTPRequestHandler):
 
     elif self.path == "/sensors":
       try:
-        data = json_sensor_data()
+        data = get_sensors_json()
         self.send_response(200)
         self.send_header("Content-type", "application/json")
         self.end_headers()
@@ -35,8 +35,9 @@ class SensorsServer(BaseHTTPRequestHandler):
 
       except (
         OSError,
-        subprocess.CalledProcessError,
-        subprocess.TimeoutExpired,
+        CalledProcessError,
+        TimeoutExpired,
+        AssertionError,
       ) as err:
         print("/sensors:", err)
         self.send_response(500)
