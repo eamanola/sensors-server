@@ -1,5 +1,6 @@
 import subprocess
-import json
+import re
+
 
 def cpu_model():
   try:
@@ -9,10 +10,13 @@ def cpu_model():
       shell = True,
       universal_newlines = True,
     )
+
     return result.stdout.strip();
+
   except Exception as err:
     print("cpu_model:", err);
     return None;
+
 
 def gpu_model():
   try:
@@ -23,9 +27,11 @@ def gpu_model():
     );
 
     return result.stdout.strip();
+
   except Exception as err:
     print("gpu_model:", err);
     return None;
+
 
 def cpu_usage():
   try:
@@ -37,31 +43,71 @@ def cpu_usage():
     );
 
     return 100 - int(result.stdout);
+
   except Exception as err:
     print("cpu_usage:", err);
     return None;
 
+# too Spaghetti
+# requires 2nd subprocess call for cpu temp
+#def fanspeeds():
+#  try:
+#    result = subprocess.run(
+#      ["sensors -u|grep -B 1 -E 'fan.+_input'|sed 's/.*_input:\s*//'|sed s/://"],
+#      stdout = subprocess.PIPE,
+#      universal_newlines = True,
+#      shell = True
+#    );
+#
+#    fanlist = list(map(
+#      (lambda fan: { "name": fan[0], "speed": fan[1], "unit": "rpm" }),
+#      [line.split('\n') for line in result.stdout.strip().split('\n--\n')]
+#    ));
+#    cpu_fan = fanlist.pop(1);
+#
+#    return cpu_fan, fanlist;
+#  except Exception as err:
+#
+#    print("sensors:", err);
+#    return None;
+
+
 def sensors():
   try:
     result = subprocess.run(
-      ['sensors', '-j'],
+      ["sensors", "-u"],
       stdout = subprocess.PIPE,
       universal_newlines = True,
-    )
-    data = json.loads(result.stdout);
-
-    return (
-      float(data["k10temp-pci-00c3"]["Tctl"]["temp1_input"]),
-      float(data["nct6798-isa-0290"]["CHA_FAN1"]["fan1_input"]),
-      float(data["nct6798-isa-0290"]["CPU_FAN"]["fan2_input"]),
-      float(data["nct6798-isa-0290"]["CHA_FAN2"]["fan3_input"]),
-      float(data["nct6798-isa-0290"]["CHA_FAN3"]["fan4_input"]),
-      float(data["nct6798-isa-0290"]["CPU_OPT"]["fan5_input"]),
-      float(data["nct6798-isa-0290"]["AIO_PUMP"]["fan6_input"]),
     );
+
+    return result.stdout.strip().split('\n');
+
   except Exception as err:
     print("sensors:", err);
     return None;
+
+
+def cpu_temp(sensors_output):
+  for i, item in enumerate(sensors_output):
+    if(item == "Tctl:"):
+      return float(re.sub(r'^\s*temp1_input:\s*', '', sensors_output[i + 1]))
+
+  return 0;
+
+
+def fanspeeds(sensors_output):
+  fans = []
+  reg = re.compile('^\s*fan\d+_input:\s*')
+
+  for i, item in enumerate(sensors_output):
+    if (reg.match(item)):
+      fans.append({
+        "name": re.sub(r':\s*$', '', sensors_output[i - 1]),
+        "speed": (float(reg.sub('', item)), "rpm")
+      })
+
+  return fans
+
 
 def gpu_info():
   try:
@@ -83,13 +129,17 @@ def gpu_info():
       universal_newlines = True,
     );
 
-    return tuple(int(i) for i in result.stdout.strip().split(', '));
+    return [int(i) for i in result.stdout.strip().split(', ')];
+
   except Exception as err:
     print("gpu_info:", err);
     return None;
 
+
 cpu_name = None;
 gpu_name = None;
+
+
 def sensor_data():
   global cpu_name;
   global gpu_name;
@@ -98,22 +148,29 @@ def sensor_data():
   gpu_name = gpu_model() if gpu_name is None else gpu_name;
 
   cpu_utilization = cpu_usage();
-
-  cpu_temperture, \
-  cha_fan1_speed, \
-  cpu_fan_speed, \
-  cha_fan2_speed, \
-  cha_fan3_speed, \
-  cpu_opt_speed, \
-  aio_pump_speed = sensors();
-
   gpu_utilization, gpu_memory_utilization, gpu_temperature, gpu_fanspeed = gpu_info();
+
+  sensors_output = sensors();
+  cpu_temperture = cpu_temp(sensors_output);
+  fans = fanspeeds(sensors_output);
+
+  # system specific
+  cpu_fan = fans.pop(1)
+  for fan in fans:
+    if fan['name'] == 'CHA_FAN1':
+      fan['name'] = "Rear"
+      continue
+
+    if fan['name'] == 'CHA_FAN2':
+      fan['name'] = "Front"
+      continue
+  # system specific
 
   cpu = {
     "name": cpu_name,
     "utilization": (cpu_utilization, "%"),
     "temperature": (cpu_temperture, "°C"),
-    "fanspeed": (cpu_fan_speed, "rpm"),
+    "fanspeed": (cpu_fan["speed"]),
   };
   gpu = {
     "name": gpu_name,
@@ -122,12 +179,5 @@ def sensor_data():
     "temperature": (gpu_temperature, "°C"),
     "fanspeed": (gpu_fanspeed, "%"),
   };
-  fans = [
-    { "name": "rear", "speed": [cha_fan1_speed, "rpm" ]},
-    { "name": "front", "speed": [cha_fan2_speed, "rpm" ]},
-    { "name": "CHA_FAN3", "speed": [cha_fan3_speed, "rpm" ]},
-    { "name": "CPU_OPT", "speed": [cpu_opt_speed, "rpm" ]},
-    { "name": "AIO_PUMP", "speed": [aio_pump_speed, "rpm" ]},
-  ];
 
   return cpu, gpu, fans;
