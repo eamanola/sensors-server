@@ -1,0 +1,4 @@
+activity="com.systemmonitor/.MainActivity"
+./interactions/unlock
+./interactions/wakeup
+./app-control/start-activity $activity

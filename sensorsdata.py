@@ -117,18 +117,18 @@ def relabel_fans(fans):
   return copy
 
 
-def format_cpu(cpu_usage, cpu_temp, cpu_fan):
+def format_cpu(cpu_name, cpu_usage, cpu_temp, cpu_fan):
   return {
-    "name": CPU_NAME,
+    "name": cpu_name,
     "utilization": { "value": cpu_usage, "unit": "%" },
     "temperature": { "value": cpu_temp, "unit": "°C" },
     "fanspeed": { "value": cpu_fan[1], "unit": "rpm" },
   }
 
 
-def format_gpu(gpu_usage, gpu_temp, gpu_fanspeed, gpu_memory):
+def format_gpu(gpu_name, gpu_usage, gpu_temp, gpu_fanspeed, gpu_memory):
   return {
-    "name": GPU_NAME,
+    "name": gpu_name,
     "utilization": { "value": gpu_usage, "unit": "%" },
     "temperature": { "value": gpu_temp, "unit": "°C" },
     "fanspeed": { "value": gpu_fanspeed, "unit": "%" },
@@ -150,12 +150,11 @@ def get_sensors():
 
   cpu_usage = get_cpu_usage()
   cpu_temp = parse_cpu_temp(sensors_info)
-  cpu = format_cpu(cpu_usage, cpu_temp, cpu_fan)
 
   gpu_usage, gpu_temp, gpu_fanspeed, gpu_memory = get_gpu_info()
-  gpu = format_gpu(gpu_usage, gpu_temp, gpu_fanspeed, gpu_memory)
 
-  relabeled = relabel_fans(rest_of_fans)
-  fans = format_fans(relabeled)
+  cpu = format_cpu(CPU_NAME, cpu_usage, cpu_temp, cpu_fan)
+  gpu = format_gpu(GPU_NAME, gpu_usage, gpu_temp, gpu_fanspeed, gpu_memory)
+  fans = format_fans(relabel_fans(rest_of_fans))
 
   return cpu, gpu, fans

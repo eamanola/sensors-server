@@ -1,0 +1,4 @@
+package="com.systemmonitor"
+./app-control/kill-package $package
+./interactions/sleep
+
