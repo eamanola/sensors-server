@@ -1,1 +1,3 @@
-adb reverse tcp:5900 tcp:5900
+port="${1:-8080}"
+adb reverse tcp:$port tcp:$port
+echo "reverse $port"

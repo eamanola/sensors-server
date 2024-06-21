@@ -3,8 +3,8 @@ from json import dumps
 from subprocess import CalledProcessError, TimeoutExpired
 from sensorsdata import get_sensors
 
-# HOSTNAME = "localhost"
-HOSTNAME = "0.0.0.0"
+HOSTNAME = "localhost"
+# HOSTNAME = "0.0.0.0"
 PORT = 8080
 
 def get_sensors_json():

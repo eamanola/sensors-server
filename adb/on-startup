@@ -3,4 +3,5 @@ activity="com.systemmonitor/.MainActivity"
 ADBS_DIR=$(dirname $0)
 $ADBS_DIR/interactions/unlock
 $ADBS_DIR/interactions/wakeup
+$ADBS_DIR/reverse 8080 && echo 'reverse 8080'
 $ADBS_DIR/app-control/start-activity $activity
