@@ -1,6 +1,0 @@
-package="com.systemmonitor"
-
-ADBS_DIR=$(dirname $0)
-$ADBS_DIR/app-control/kill-package $package
-$ADBS_DIR/interactions/sleep
-

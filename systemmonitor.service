@@ -1,0 +1,17 @@
+[Unit]
+Description=Systemmonitor
+
+[Service]
+Environment="PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/home/eamanola/projects/react-native/Android/Sdk/platform-tools"
+Type=simple
+# Type=oneshot
+# RemainAfterExit=yes
+ExecStart=/home/eamanola/projects/python/sensors-server/on-startup
+ExecStop=/home/eamanola/projects/python/sensors-server/on-shutdown
+
+[Install]
+WantedBy=default.target
+
+# systemctl --user enable ./systemmonitor.service
+# systemctl --user start systemmonitor
+# systemctl --user status systemmonitor
