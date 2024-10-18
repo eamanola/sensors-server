@@ -2,6 +2,8 @@
 activity="com.systemmonitor/.MainActivity"
 
 SRC_DIR=$(dirname $0)
+
+sleep 5
 $SRC_DIR/adb/interactions/unlock
 $SRC_DIR/adb/interactions/wakeup
 $SRC_DIR/adb/reverse 8080

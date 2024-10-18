@@ -1,0 +1,11 @@
+#!/bin/sh
+screenState="$(adb shell dumpsys input_method \
+   |grep -i "mSystemReady=true mInteractive=" \
+   |awk -F= '{print $3}')"
+
+if [ $screenState = "true" ]; then
+    echo "on";
+else
+    echo "off";
+fi
+
