@@ -67,6 +67,11 @@ def get_cpu_usage():
 
   return 100 - int(result.stdout)
 
+def get_ram():
+  ram_usage = 0
+  max_ram = 32
+  return int(ram_usage / max_ram * 100)
+
 
 # fans can be named in /etc/sensors.d/*.conf
 def take_cpu_fan(fans):
@@ -117,12 +122,13 @@ def relabel_fans(fans):
   return copy
 
 
-def format_cpu(cpu_name, cpu_usage, cpu_temp, cpu_fan):
+def format_cpu(cpu_name, cpu_usage, cpu_temp, cpu_fan, ram):
   return {
     "name": cpu_name,
     "utilization": { "value": cpu_usage, "unit": "%" },
     "temperature": { "value": cpu_temp, "unit": "°C" },
     "fanspeed": { "value": cpu_fan[1], "unit": "rpm" },
+    "memory": { "value": ram, "unit": "%" },
   }
 
 
@@ -150,10 +156,11 @@ def get_sensors():
 
   cpu_usage = get_cpu_usage()
   cpu_temp = parse_cpu_temp(sensors_info)
+  ram = get_ram()
 
   gpu_usage, gpu_temp, gpu_fanspeed, gpu_memory = get_gpu_info()
 
-  cpu = format_cpu(CPU_NAME, cpu_usage, cpu_temp, cpu_fan)
+  cpu = format_cpu(CPU_NAME, cpu_usage, cpu_temp, cpu_fan, ram)
   gpu = format_gpu(GPU_NAME, gpu_usage, gpu_temp, gpu_fanspeed, gpu_memory)
   fans = format_fans(relabel_fans(rest_of_fans))
 
