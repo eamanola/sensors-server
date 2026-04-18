@@ -6,6 +6,8 @@ Environment="PATH=/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/home/e
 Type=simple
 # Type=oneshot
 # RemainAfterExit=yes
+# wait for adb
+ExecStartPre=/bin/sleep 5
 ExecStart=/home/eamanola/projects/python/sensors-server/on-startup
 ExecStop=/home/eamanola/projects/python/sensors-server/on-shutdown
 
@@ -15,3 +17,4 @@ WantedBy=default.target
 # systemctl --user enable ./systemmonitor.service
 # systemctl --user start systemmonitor
 # systemctl --user status systemmonitor
+# systemctl --user daemon-reload
