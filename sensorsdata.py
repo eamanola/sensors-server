@@ -1,77 +1,63 @@
 import subprocess
 import re
 
-
-def get_cpu_model():
+def run_command(cmd, shell = False):
   result = subprocess.run(
-    ["lscpu"],
+    cmd if shell else cmd.split(),
     stdout = subprocess.PIPE,
     universal_newlines = True,
     check = True,
+    shell = shell
   )
 
-  reg = re.compile(r"^\s*Model\ name:\s*")
+  print(cmd, ": ", result.stdout.strip())
 
-  model_lines = [line for line in result.stdout.strip().split("\n") if reg.match(line)]
-  assert len(model_lines) == 1
+  return result.stdout.strip()
 
-  return reg.sub("", model_lines[0])
+def get_cpu_model():
+  result = run_command("lscpu | awk '/Model name:/ {sub(/^Model name:/, \"\", $0); print $0}'", shell=True)
+  return result
 
 CPU_NAME = get_cpu_model()
 
 
 def get_gpu_model():
-  result = subprocess.run(
-    ["nvidia-smi", "--query-gpu", "gpu_name", "--format=csv,noheader"],
-    stdout = subprocess.PIPE,
-    universal_newlines = True,
-    check = True,
-  )
-
-  return result.stdout.strip()
+  result = run_command("nvidia-smi --query-gpu gpu_name --format=csv,noheader")
+  return result
 
 GPU_NAME = get_gpu_model()
 
 
 def get_gpu_info():
   keys = ["utilization.gpu", "temperature.gpu", "fan.speed", "utilization.memory"]
+  result = run_command("nvidia-smi --query-gpu " + ",".join(keys) + " --format=csv,noheader,nounits")
 
-  result = subprocess.run(
-    ["nvidia-smi", "--query-gpu", ",".join(keys), "--format=csv,noheader,nounits"],
-    stdout = subprocess.PIPE,
-    universal_newlines = True,
-    check = True,
-  )
+  return [int(i) for i in result.split(", ")]
 
-  return [int(i) for i in result.stdout.strip().split(", ")]
+# get_gpu_info()
 
 def get_sensors_info():
-  result = subprocess.run(
-    ["sensors", "-u"],
-    stdout = subprocess.PIPE,
-    universal_newlines = True,
-    check = True,
-  )
+  result = run_command("sensors -u")
 
-  return result.stdout.strip().split("\n")
+  return result.split("\n")
 
+# get_sensors_info()
 
 def get_cpu_usage():
-  result = subprocess.run(
-    ["vmstat 1 2|tail -1|awk '{print $15}'"],
-    stdout = subprocess.PIPE,
-    universal_newlines = True,
-    check = True,
-    shell = True,
-  )
+  result = run_command("vmstat 1 2|tail -1|awk '{print 100 - $15}'", shell=True)
 
-  return 100 - int(result.stdout)
+  return int(result)
+
+# get_cpu_usage()
 
 def get_ram():
-  ram_usage = 0
-  max_ram = 32
-  return int(ram_usage / max_ram * 100)
+  # result = run_command("free | awk '/Mem:/ {print $3/$2*100}'", shell=True)
 
+  # return float(result.replace(",", "."))
+
+  return 0
+
+# get_ram()
 
 # fans can be named in /etc/sensors.d/*.conf
 def take_cpu_fan(fans):
@@ -132,13 +118,13 @@ def format_cpu(cpu_name, cpu_usage, cpu_temp, cpu_fan, ram):
   }
 
 
-def format_gpu(gpu_name, gpu_usage, gpu_temp, gpu_fanspeed, gpu_memory):
+def format_gpu(gpu_name, gpu_usage, gpu_temp, gpu_fanspeed, vram):
   return {
     "name": gpu_name,
     "utilization": { "value": gpu_usage, "unit": "%" },
     "temperature": { "value": gpu_temp, "unit": "°C" },
     "fanspeed": { "value": gpu_fanspeed, "unit": "%" },
-    "memory": { "value": gpu_memory, "unit": "%" },
+    "memory": { "value": vram, "unit": "%" },
   }
 
 
@@ -158,10 +144,10 @@ def get_sensors():
   cpu_temp = parse_cpu_temp(sensors_info)
   ram = get_ram()
 
-  gpu_usage, gpu_temp, gpu_fanspeed, gpu_memory = get_gpu_info()
+  gpu_usage, gpu_temp, gpu_fanspeed, vram = get_gpu_info()
 
   cpu = format_cpu(CPU_NAME, cpu_usage, cpu_temp, cpu_fan, ram)
-  gpu = format_gpu(GPU_NAME, gpu_usage, gpu_temp, gpu_fanspeed, gpu_memory)
+  gpu = format_gpu(GPU_NAME, gpu_usage, gpu_temp, gpu_fanspeed, vram)
   fans = format_fans(relabel_fans(rest_of_fans))
 
   return cpu, gpu, fans
