@@ -51,11 +51,9 @@ def get_cpu_usage():
 # get_cpu_usage()
 
 def get_ram():
-  # result = run_command("free | awk '/Mem:/ {print $3/$2*100}'", shell=True)
+  result = run_command("free | awk '/Mem:/ {print $3/$2*100}'", shell=True)
 
-  # return float(result.replace(",", "."))
-
-  return 0
+  return float(result.replace(",", "."))
 
 # get_ram()
 
