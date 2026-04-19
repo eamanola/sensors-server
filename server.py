@@ -8,11 +8,12 @@ HOSTNAME = "localhost"
 PORT = 8080
 
 def get_sensors_json():
-  cpu, gpu, fans = get_sensors()
+  cpu, gpu, memory, fans = get_sensors()
 
   return dumps({
     "cpu": cpu,
     "gpu": gpu,
+    "memory": memory,
     "fans": fans,
   })
 

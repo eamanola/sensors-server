@@ -107,23 +107,27 @@ def relabel_fans(fans):
   return copy
 
 
-def format_cpu(cpu_name, cpu_usage, cpu_temp, cpu_fan, ram):
+def format_cpu(cpu_name, cpu_usage, cpu_temp, cpu_fan):
   return {
     "name": cpu_name,
     "utilization": { "value": cpu_usage, "unit": "%" },
     "temperature": { "value": cpu_temp, "unit": "°C" },
     "fanspeed": { "value": cpu_fan[1], "unit": "rpm" },
-    "memory": { "value": ram, "unit": "%" },
   }
 
 
-def format_gpu(gpu_name, gpu_usage, gpu_temp, gpu_fanspeed, vram):
+def format_gpu(gpu_name, gpu_usage, gpu_temp, gpu_fanspeed):
   return {
     "name": gpu_name,
     "utilization": { "value": gpu_usage, "unit": "%" },
     "temperature": { "value": gpu_temp, "unit": "°C" },
     "fanspeed": { "value": gpu_fanspeed, "unit": "%" },
-    "memory": { "value": vram, "unit": "%" },
+  }
+
+def format_memory(ram, vram):
+  return {
+    "ram": { "value": ram, "unit": "%" },
+    "vram": { "value": vram, "unit": "%" },
   }
 
 
@@ -145,8 +149,9 @@ def get_sensors():
 
   gpu_usage, gpu_temp, gpu_fanspeed, vram = get_gpu_info()
 
-  cpu = format_cpu(CPU_NAME, cpu_usage, cpu_temp, cpu_fan, ram)
-  gpu = format_gpu(GPU_NAME, gpu_usage, gpu_temp, gpu_fanspeed, vram)
+  cpu = format_cpu(CPU_NAME, cpu_usage, cpu_temp, cpu_fan)
+  gpu = format_gpu(GPU_NAME, gpu_usage, gpu_temp, gpu_fanspeed)
+  memory = format_memory(ram, vram)
   fans = format_fans(relabel_fans(rest_of_fans))
 
-  return cpu, gpu, fans
+  return cpu, gpu, memory, fans
