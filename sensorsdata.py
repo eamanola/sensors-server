@@ -10,7 +10,7 @@ def run_command(cmd, shell = False):
     shell = shell
   )
 
-  print(cmd, ": ", result.stdout.strip())
+  # print(cmd, ": ", result.stdout.strip())
 
   return result.stdout.strip()
 
@@ -30,7 +30,8 @@ GPU_NAME = get_gpu_model()
 
 def get_gpu_info():
   keys = ["utilization.gpu", "temperature.gpu", "fan.speed", "utilization.memory"]
-  result = run_command("nvidia-smi --query-gpu " + ",".join(keys) + " --format=csv,noheader,nounits")
+  cmd = "nvidia-smi --query-gpu " + ",".join(keys) + " --format=csv,noheader,nounits"
+  result = run_command(cmd)
 
   return [int(i) for i in result.split(", ")]
 
